@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+  <meta charset="UTF-8" />
+  <title>CSSA 学生会员查询</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+  <style>
+    body {
+      margin: 0;
+      background-color: #f0f2f5;
+      font-family: "Noto Sans", "Helvetica Neue", Arial, sans-serif;
+    }
+
+    .navbar {
+      background-color: #003366;
+      color: white;
+      padding: 16px 32px;
+      font-size: 20px;
+      font-weight: bold;
+    }
+
+    .container {
+      max-width: 600px;
+      margin: 60px auto;
+      background: #fff;
+      border-radius: 12px;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+      padding: 40px 50px;
+    }
+
+    h1 {
+      text-align: center;
+      font-size: 24px;
+      color: #003366;
+      margin-bottom: 30px;
+    }
+
+    label {
+      display: block;
+      margin-bottom: 6px;
+      color: #333;
+      font-weight: bold;
+    }
+
+    input[type="text"],
+    input[type="file"] {
+      width: 100%;
+      padding: 10px 12px;
+      margin-bottom: 20px;
+      border: 1px solid #ccc;
+      border-radius: 6px;
+      font-size: 16px;
+    }
+
+    button {
+      width: 100%;
+      padding: 12px;
+      background-color: #003366;
+      color: white;
+      font-size: 16px;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+      transition: background 0.3s ease;
+    }
+
+    button:hover {
+      background-color: #004a99;
+    }
+
+    #result {
+      margin-top: 20px;
+      font-size: 18px;
+      text-align: center;
+      font-weight: bold;
+    }
+
+    .hint {
+      font-size: 14px;
+      color: #999;
+      margin-top: -15px;
+      margin-bottom: 20px;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="navbar">HKBUCSSA</div>
+
+  <div class="container">
+    <h1>学生会员身份查询</h1>
+
+    <label for="fileInput">上传 Excel 文件（需包含“Student Number”列）</label>
+    <input type="file" id="fileInput" accept=".xlsx" />
+    <div class="hint">例如通过 QuestionPro / Excel 下载的报名数据</div>
+
+    <label for="studentNumber">请输入你的学号</label>
+    <input type="text" id="studentNumber" placeholder="如 24417920" />
+
+    <button onclick="checkMembership()">查询会员身份</button>
+
+    <div id="result"></div>
+  </div>
+
+  <script>
+    let memberNumbers = [];
+
+    document.getElementById('fileInput').addEventListener('change', function (e) {
+      const file = e.target.files[0];
+      const reader = new FileReader();
+
+      reader.onload = function (e) {
+        const data = new Uint8Array(e.target.result);
+        const workbook = XLSX.read(data, { type: 'array' });
+        const sheet = workbook.Sheets[workbook.SheetNames[0]];
+        const json = XLSX.utils.sheet_to_json(sheet);
+
+        memberNumbers = json
+          .map(row => parseInt(row["Student Number"]))
+          .filter(num => !isNaN(num));
+
+        alert("✅ 上传成功，共载入 " + memberNumbers.length + " 个学号。");
+      };
+
+      reader.readAsArrayBuffer(file);
+    });
+
+    function checkMembership() {
+      const input = document.getElementById("studentNumber").value.trim();
+      const number = parseInt(input);
+      const result = document.getElementById("result");
+
+      if (!input || isNaN(number)) {
+        result.innerText = "⚠️ 请输入有效的学号";
+        result.style.color = "#cc0000";
+        return;
+      }
+
+      if (memberNumbers.includes(number)) {
+        result.innerText = "✅ 是 CSSA 注册会员";
+        result.style.color = "green";
+      } else {
+        result.innerText = "❌ 查无此人，非会员";
+        result.style.color = "#cc0000";
+      }
+    }
+  </script>
+</body>
+</html>
